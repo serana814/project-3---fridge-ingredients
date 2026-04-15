@@ -49,6 +49,17 @@
       font-size: 14px;
     }
 
+    /* Favorites section */
+    #favorites-section {
+      margin-top: 40px;
+    }
+
+    #favorites-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
     /* Modal overlay */
     #modal {
       display: none;
@@ -78,6 +89,12 @@
       border: none;
       background: none;
     }
+
+    .save-btn {
+      padding: 8px 16px;
+      margin-top: 12px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -92,6 +109,12 @@
 
   <div id="status"></div>
   <div id="results"></div>
+
+  <!-- Favorites section -->
+  <div id="favorites-section">
+    <h2>My Favorites</h2>
+    <div id="favorites-grid"></div>
+  </div>
 
   <!-- Modal -->
   <div id="modal">
@@ -109,6 +132,13 @@
     const modal = document.getElementById("modal");
     const modalBody = document.getElementById("modal-body");
     const closeBtn = document.getElementById("close-btn");
+    const favoritesGrid = document.getElementById("favorites-grid");
+
+    // Load favorites from localStorage (or empty array if none saved)
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+
+    // Show favorites on page load
+    displayFavorites();
 
     // Search for meals by ingredient
     searchBtn.addEventListener("click", function() {
@@ -158,7 +188,10 @@
         .then(data => {
           const meal = data.meals[0];
 
-          // Collect ingredients (API gives 20 slots, some are empty)
+          // Check if already saved
+          const alreadySaved = favorites.some(f => f.id === meal.idMeal);
+
+          // Collect ingredients
           let ingredients = "";
           for (let i = 1; i <= 20; i++) {
             const ingredient = meal[`strIngredient${i}`];
@@ -171,6 +204,9 @@
           modalBody.innerHTML = `
             <h2>${meal.strMeal}</h2>
             <img src="${meal.strMealThumb}" width="100%">
+            <button class="save-btn" onclick="toggleFavorite('${meal.idMeal}', '${meal.strMeal}', '${meal.strMealThumb}')">
+              ${alreadySaved ? "❤️ Saved" : "🤍 Save to Favorites"}
+            </button>
             <h3>Ingredients</h3>
             <ul>${ingredients}</ul>
             <h3>Instructions</h3>
@@ -180,6 +216,43 @@
         .catch(error => {
           modalBody.innerHTML = "Could not load recipe. Please try again.";
         });
+    }
+
+    // Save or remove a meal from favorites
+    function toggleFavorite(id, name, thumb) {
+      const alreadySaved = favorites.some(f => f.id === id);
+
+      if (alreadySaved) {
+        // Remove from favorites
+        favorites = favorites.filter(f => f.id !== id);
+      } else {
+        // Add to favorites
+        favorites.push({ id, name, thumb });
+      }
+
+      // Save updated favorites to localStorage
+      localStorage.setItem("favorites", JSON.stringify(favorites));
+
+      // Refresh favorites display and reopen recipe to update button
+      displayFavorites();
+      openRecipe(id);
+    }
+
+    // Display saved favorites
+    function displayFavorites() {
+      if (favorites.length === 0) {
+        favoritesGrid.innerHTML = "<p>No favorites saved yet.</p>";
+        return;
+      }
+
+      let html = "";
+      for (let i = 0; i < favorites.length; i++) {
+        html += `<div class="meal-card" onclick="openRecipe('${favorites[i].id}')">
+          <img src="${favorites[i].thumb}" alt="${favorites[i].name}">
+          <p>${favorites[i].name}</p>
+        </div>`;
+      }
+      favoritesGrid.innerHTML = html;
     }
 
     // Close modal
