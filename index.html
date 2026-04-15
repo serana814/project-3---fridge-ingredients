@@ -3,57 +3,196 @@
 <head>
   <meta charset="UTF-8">
   <title>Fridge Finder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    #search-bar {
+      margin-bottom: 20px;
+    }
+
+    #ingredientInput {
+      padding: 8px;
+      width: 250px;
+    }
+
+    #searchBtn {
+      padding: 8px 16px;
+    }
+
+    /* Grid of meal cards */
+    #results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .meal-card {
+      cursor: pointer;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .meal-card img {
+      width: 100%;
+    }
+
+    .meal-card p {
+      padding: 8px;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    /* Modal overlay */
+    #modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Modal box */
+    #modal-content {
+      background: white;
+      padding: 24px;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    #close-btn {
+      float: right;
+      cursor: pointer;
+      font-size: 20px;
+      border: none;
+      background: none;
+    }
+  </style>
 </head>
 <body>
 
   <h1>Fridge Finder</h1>
+  <p>Enter an ingredient to find meals you can make.</p>
 
-  <input type="text" id="ingredientInput" placeholder="Enter an ingredient...">
-  <button id="searchBtn">Search</button>
+  <div id="search-bar">
+    <input type="text" id="ingredientInput" placeholder="Enter an ingredient...">
+    <button id="searchBtn">Search</button>
+  </div>
 
+  <div id="status"></div>
   <div id="results"></div>
+
+  <!-- Modal -->
+  <div id="modal">
+    <div id="modal-content">
+      <button id="close-btn">✕</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
 
   <script>
     const searchBtn = document.getElementById("searchBtn");
     const ingredientInput = document.getElementById("ingredientInput");
     const resultsDiv = document.getElementById("results");
+    const statusDiv = document.getElementById("status");
+    const modal = document.getElementById("modal");
+    const modalBody = document.getElementById("modal-body");
+    const closeBtn = document.getElementById("close-btn");
 
+    // Search for meals by ingredient
     searchBtn.addEventListener("click", function() {
       const ingredient = ingredientInput.value;
       const url = `https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`;
 
-      // Show loading message
-      resultsDiv.innerHTML = "Loading...";
+      statusDiv.innerHTML = "Loading...";
+      resultsDiv.innerHTML = "";
 
       fetch(url)
         .then(response => response.json())
         .then(data => {
-          console.log(data); // look at this in browser dev tools!
+          statusDiv.innerHTML = "";
           displayMeals(data.meals);
         })
         .catch(error => {
-          resultsDiv.innerHTML = "Something went wrong. Please try again.";
+          statusDiv.innerHTML = "Something went wrong. Please try again.";
           console.log(error);
         });
     });
 
+    // Display meal cards in a grid
     function displayMeals(meals) {
-      // Handle no results
       if (!meals) {
         resultsDiv.innerHTML = "No meals found. Try a different ingredient!";
         return;
       }
 
-      // Build HTML for each meal
       let html = "";
       for (let i = 0; i < meals.length; i++) {
-        html += `<div>
-          <img src="${meals[i].strMealThumb}" width="100">
+        html += `<div class="meal-card" onclick="openRecipe('${meals[i].idMeal}')">
+          <img src="${meals[i].strMealThumb}" alt="${meals[i].strMeal}">
           <p>${meals[i].strMeal}</p>
         </div>`;
       }
       resultsDiv.innerHTML = html;
     }
+
+    // Fetch and show full recipe in modal
+    function openRecipe(id) {
+      const url = `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`;
+      modalBody.innerHTML = "Loading...";
+      modal.style.display = "flex";
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const meal = data.meals[0];
+
+          // Collect ingredients (API gives 20 slots, some are empty)
+          let ingredients = "";
+          for (let i = 1; i <= 20; i++) {
+            const ingredient = meal[`strIngredient${i}`];
+            const measure = meal[`strMeasure${i}`];
+            if (ingredient && ingredient.trim() !== "") {
+              ingredients += `<li>${measure} ${ingredient}</li>`;
+            }
+          }
+
+          modalBody.innerHTML = `
+            <h2>${meal.strMeal}</h2>
+            <img src="${meal.strMealThumb}" width="100%">
+            <h3>Ingredients</h3>
+            <ul>${ingredients}</ul>
+            <h3>Instructions</h3>
+            <p>${meal.strInstructions}</p>
+          `;
+        })
+        .catch(error => {
+          modalBody.innerHTML = "Could not load recipe. Please try again.";
+        });
+    }
+
+    // Close modal
+    closeBtn.addEventListener("click", function() {
+      modal.style.display = "none";
+    });
+
+    // Close modal if user clicks outside the box
+    modal.addEventListener("click", function(e) {
+      if (e.target === modal) {
+        modal.style.display = "none";
+      }
+    });
   </script>
 
 </body>
