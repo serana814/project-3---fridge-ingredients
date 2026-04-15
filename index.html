@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fridge Finder</title>
+</head>
+<body>
+
+  <h1>Fridge Finder</h1>
+
+  <input type="text" id="ingredientInput" placeholder="Enter an ingredient...">
+  <button id="searchBtn">Search</button>
+
+  <div id="results"></div>
+
+  <script>
+    const searchBtn = document.getElementById("searchBtn");
+    const ingredientInput = document.getElementById("ingredientInput");
+    const resultsDiv = document.getElementById("results");
+
+    searchBtn.addEventListener("click", function() {
+      const ingredient = ingredientInput.value;
+      const url = `https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`;
+
+      // Show loading message
+      resultsDiv.innerHTML = "Loading...";
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          console.log(data); // look at this in browser dev tools!
+          displayMeals(data.meals);
+        })
+        .catch(error => {
+          resultsDiv.innerHTML = "Something went wrong. Please try again.";
+          console.log(error);
+        });
+    });
+
+    function displayMeals(meals) {
+      // Handle no results
+      if (!meals) {
+        resultsDiv.innerHTML = "No meals found. Try a different ingredient!";
+        return;
+      }
+
+      // Build HTML for each meal
+      let html = "";
+      for (let i = 0; i < meals.length; i++) {
+        html += `<div>
+          <img src="${meals[i].strMealThumb}" width="100">
+          <p>${meals[i].strMeal}</p>
+        </div>`;
+      }
+      resultsDiv.innerHTML = html;
+    }
+  </script>
+
+</body>
+</html>
