@@ -1,0 +1,32 @@
+## Iteration 1 Learning Log
+
+**What does the API response look like?**
+The API gives me a JSON object with an array of meals. Each meal is given a name (strMeal), a photo (strMealThumb), and its own unique ID (idMeal). For the display cards, I used the name and photo for each recipe.
+
+**What was confusing or new?**
+I was struggling to understand the .then() chaining after fetch(). I had never seen it before. I did not realize that you needed to first call .json() on the response before you are actually able to read the data. I used the console to help me see what was coming back from the API.
+
+**What did you get working?**
+I managed to get the search bar to work. It calls the TheMealDB API and gives you cards that show recipes and images based on the ingredient that you type in.
+
+## Iteration 2 Learning Log
+
+**How did you connect user input to API calls?**
+When anyone types an ingredient in the search bar and clicks the search button, the code automatically uses document.ElementById to take the value from the input box. Then, that value is automatically inserted into the API URL. So, if you type in the word "chicken", it automatically builds the URL with chicken in it and gets you results that are specifically containing that ingredient. Each time you search it creates a new API call with whatever you typed into the search bar.
+
+**What CSS layout did you use for displaying data?**
+I used CSS grid to display the meal cards in a grid. The auto-fill and minmax properties are what allow the grid to be responsive. This means that the number of columns displayed on the screen depends on how wide the screen is (more columns on a wider screen and less columns on a more narrow screen).
+
+**What design decisions did you make?**
+I decided to use a pop up whenever someone clicks on a recipe. Whenever someone clicks on a recipe, a pop up will appear with the image of the recipe, the ingredients, and the directions. This allows the user to click on a recipe, see the details and decide if they want to use it and if not, go back to where they left off on the recipes page. The rest of the design is very minimal as I believed that it would be too chaotic with the images of the recipes if I were to add more designs or colors. I also decided to include a loading message so that while the user waits, they know that something is happening and don't assume that the website is not working.
+
+## Iteration 3 Learning Log
+
+**What extension did you add?**
+I added an extension so that you could save your favorite recipes to the local storage. Whenever you expand a recipe so that you can see the details, there is now a button below the name and image that says "add to favorites" with a heart next to it. That way, the user can scroll through recipes and select which ones they like and have them easily accessible. They will still be there even if the user closes the browser since they are stored in local storage and not just memory.
+
+**What edge cases did you handle?**
+If no meals are found when the user searches for an ingredient, the app gives them a message saying that there are no recipes with that ingredient and to try again with another ingredient. If for some reason the API fails completely, there will be an error message that will appear. Also, whenever the user has not saved any recipes to their favorites, the section will read "No favorites saved yet." instead of just an empty space.
+
+**What surprised you about working with a real API?**
+I was surprised by the amount of data the API stores and returns. Each of the meals has up to 20 ingredients, so I had to loop through them and filter out the empty slots. I also was not expecting to need 2 API calls (one for searching by ingredient and one for looking up the full recipe details).
